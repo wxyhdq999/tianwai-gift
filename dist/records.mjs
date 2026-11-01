@@ -1,3 +1,4 @@
+import { photoPreviews } from './photo-previews.mjs';
 // Dates supplied by the gift creator. Add recovered shows here; venue names are unconfirmed.
 export const cities = [
   {
@@ -12,8 +13,8 @@ export const cities = [
     "photos": {
       "2023.08.26": {
         "backCaption": "听说那天倾盆大雨",
-        "front": "./assets/photos/2023-08-26-zunyi/front.jpg",
-        "back": "./assets/photos/2023-08-26-zunyi/back.jpg"
+        "front": "./assets/photos/2023-08-26-zunyi/front.webp",
+        "back": "./assets/photos/2023-08-26-zunyi/back.webp"
       }
     }
   },
@@ -29,8 +30,8 @@ export const cities = [
     "photos": {
       "2023.10.21": {
         "backCaption": "凌晨两点的鱿鱼丝",
-        "front": "./assets/photos/2023-10-21-changzhou/front.jpg",
-        "back": "./assets/photos/2023-10-21-changzhou/back.jpg"
+        "front": "./assets/photos/2023-10-21-changzhou/front.webp",
+        "back": "./assets/photos/2023-10-21-changzhou/back.webp"
       }
     }
   },
@@ -46,8 +47,8 @@ export const cities = [
     "photos": {
       "2024.01.13": {
         "backCaption": "这张真的很有氛围感啊啊啊",
-        "front": "./assets/photos/2024-01-13-qujing/front.jpg",
-        "back": "./assets/photos/2024-01-13-qujing/back.jpg"
+        "front": "./assets/photos/2024-01-13-qujing/front.webp",
+        "back": "./assets/photos/2024-01-13-qujing/back.webp"
       }
     }
   },
@@ -63,8 +64,8 @@ export const cities = [
     "photos": {
       "2026.05.29": {
         "backCaption": "我翻聊天记录看到这个实在是太好笑了，你说你五点才睡",
-        "front": "./assets/photos/2026-05-30-nanjing/front.jpg",
-        "back": "./assets/photos/2026-05-30-nanjing/back.jpg"
+        "front": "./assets/photos/2026-05-30-nanjing/front.webp",
+        "back": "./assets/photos/2026-05-30-nanjing/back.webp"
       }
     }
   },
@@ -80,8 +81,8 @@ export const cities = [
     "photos": {
       "2026.06.26": {
         "backCaption": "哦哦特得",
-        "front": "./assets/photos/2026-06-26-chongqing/front.jpg",
-        "back": "./assets/photos/2026-06-26-chongqing/back.jpg"
+        "front": "./assets/photos/2026-06-26-chongqing/front.webp",
+        "back": "./assets/photos/2026-06-26-chongqing/back.webp"
       }
     }
   },
@@ -97,12 +98,12 @@ export const cities = [
     ],
     "photos": {
       "2026.08.29": {
-        "front": "./assets/photos/2026-08-29-shenzhen/front.jpg",
-        "back": "./assets/photos/2026-08-29-shenzhen/back.jpg"
+        "front": "./assets/photos/2026-08-29-shenzhen/front.webp",
+        "back": "./assets/photos/2026-08-29-shenzhen/back.webp"
       },
       "2026.08.30": {
-        "front": "./assets/photos/2026-08-30-shenzhen/front.jpg",
-        "back": "./assets/photos/2026-08-30-shenzhen/back.jpg"
+        "front": "./assets/photos/2026-08-30-shenzhen/front.webp",
+        "back": "./assets/photos/2026-08-30-shenzhen/back.webp"
       }
     }
   },
@@ -118,18 +119,18 @@ export const cities = [
     ],
     "photos": {
       "2026.10.24": {
-        "front": "./assets/photos/2026-10-24-guiyang/front.jpg",
-        "back": "./assets/photos/2026-10-24-guiyang/back.jpg"
+        "front": "./assets/photos/2026-10-24-guiyang/front.webp",
+        "back": "./assets/photos/2026-10-24-guiyang/back.webp"
       },
       "2026.10.25": {
         "backCaption": "好巧你俩衣服颜色一样",
-        "front": "./assets/photos/2026-10-25-guiyang/front.jpg",
-        "back": "./assets/photos/2026-10-25-guiyang/back.jpg"
+        "front": "./assets/photos/2026-10-25-guiyang/front.webp",
+        "back": "./assets/photos/2026-10-25-guiyang/back.webp"
       }
     }
   }
 ];
-export const allRecords = cities.flatMap(city => city.shows.map(date => ({ id: `${city.id}:${date}`, date, city: city.name, cityId: city.id, photos: { ...city.photos[date], thumbnail: city.photos[date].front.replace('front.jpg', 'front-thumb.jpg') } })));
+export const allRecords = cities.flatMap(city => city.shows.map(date => ({ id: `${city.id}:${date}`, date, city: city.name, cityId: city.id, photos: { ...city.photos[date], thumbnail: city.photos[date].front.replace('front.webp', 'front-thumb.jpg'), preview: photoPreviews[city.photos[date].front], backPreview: photoPreviews[city.photos[date].back] } })));
 export const total = allRecords.length;
 export function cleanProgress(value) {
   return [...new Set(Array.isArray(value) ? value.filter(id => allRecords.some(record => record.id === id)) : [])];

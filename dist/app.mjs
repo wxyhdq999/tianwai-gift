@@ -1,4 +1,4 @@
-import { assetUrl, createPhotoPreloader } from './media.mjs';
+import { assetUrl } from './media.mjs';
 import { createGift } from './gift.mjs';
 import { createFinale } from './finale.mjs';
 import { canArrange, canOpenPackage } from './journey-state.mjs';
@@ -16,7 +16,6 @@ let searchId = puzzleRecords.find(record => !state.collected.includes(record.id)
 let hintLevel = 0;
 let toastTimer;
 const currentRecord = () => getRecord(`${currentCity.id}:${currentCity.shows[page]}`);
-const preloadPhoto = createPhotoPreloader();
 function toast(message) {
   $('toast').textContent = message; $('toast').classList.add('visible');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('visible'), 3200);
@@ -57,8 +56,6 @@ wallSvg.querySelector('g').replaceChildren(...cities.map(city => {
 for (const city of cities) {
   const button = document.createElement('button'); button.className = 'city-point'; button.id = `city-${city.id}`;
   button.style.left = `${city.x}%`; button.style.top = `${city.y}%`;
-  const warmCity = () => city.shows.forEach(date => preloadPhoto(city.photos[date].front.replace('front.jpg', 'front-thumb.jpg'), true));
-  button.addEventListener('pointerenter', warmCity); button.addEventListener('focus', warmCity);
   button.innerHTML = `<span class="point-dot"></span><span class="city-label">${city.name}${city.shows.length > 1 ? '<em>×2</em>' : ''}</span>`;
   button.addEventListener('click', () => {
     if (city.shows.length === 1) { openRecord(`${city.id}:${city.shows[0]}`); return; }
@@ -233,22 +230,9 @@ function renderTicket() {
   const record = currentRecord(), photos = record.photos;
   const preview = getGate(record.id).type !== 'puzzle' || isSolved(state, record.id);
   const board = $('puzzle-board');
-  board.style.backgroundImage = 'none';
-  if (preview) {
-    const thumbnail = new Image();
-    thumbnail.fetchPriority = 'high';
-    thumbnail.onload = () => {
-      if (currentRecord().id !== record.id) return;
-      board.style.backgroundImage = `url("${assetUrl(photos.thumbnail)}")`;
-      // Reserve the same shape before the full photo arrives.
-      const ratio = thumbnail.naturalWidth / thumbnail.naturalHeight;
-      if (!$('front-photo').complete || $('front-photo').classList.contains('is-loading')) {
-        board.style.width = `min(100%, ${230 * ratio}px)`;
-        board.style.aspectRatio = String(ratio);
-      }
-    };
-    thumbnail.src = assetUrl(photos.thumbnail);
-  }
+  // Embedded previews need no image request, even on a slow connection.
+  board.style.backgroundImage = preview ? `url("${photos.preview}")` : 'none';
+  $('photo-reverse').style.backgroundImage = `url("${photos.backPreview}")`;
   selectedPiece = null; showAllPieces = false; hintLevel = 0; $('piece-picker').hidden = true;
   $('unlock-answer').value = ''; $('gate-feedback').textContent = '';
   $('piece-tray').hidden = getGate(record.id).type !== 'puzzle';
