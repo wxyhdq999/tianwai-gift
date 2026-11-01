@@ -5,3 +5,6 @@
 
 .photo-face img.is-loading{opacity:0}.photo-loading{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:#c2cbbd;font-size:11px;letter-spacing:1px;background:#1b2b34;z-index:1}
 .show-choices{display:grid;gap:12px}.show-choices button{min-height:46px;font-family:var(--mono)}
+#puzzle-board{background-position:center;background-size:contain;background-repeat:no-repeat}
+#photo-obverse .photo-loading{inset:auto 0 0;margin:0;padding:5px;background:#1b2b34b3;font-size:10px}
+#opening-progress{font-size:11px;color:#a0adae;letter-spacing:1px;margin:22px 0 0;line-height:1.8}#enter-room:disabled{cursor:wait;opacity:.45}

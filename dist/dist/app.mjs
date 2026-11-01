@@ -1,4 +1,4 @@
-import { assetUrl } from './media.mjs';
+import { assetUrl, createPhotoPreloader } from './media.mjs';
 import { createGift } from './gift.mjs';
 import { createFinale } from './finale.mjs';
 import { canArrange, canOpenPackage } from './journey-state.mjs';
@@ -16,6 +16,27 @@ let searchId = puzzleRecords.find(record => !state.collected.includes(record.id)
 let hintLevel = 0;
 let toastTimer;
 const currentRecord = () => getRecord(`${currentCity.id}:${currentCity.shows[page]}`);
+const preloadPhoto = createPhotoPreloader();
+// Finish downloading and decoding every concert photo before entering the room.
+const requiredPhotos = allRecords.flatMap(record => [record.photos.front, record.photos.back]);
+const preparedPhotos = new Set();
+let photosReady = false, preparingPhotos = false;
+async function preparePhotos() {
+  if (preparingPhotos || photosReady) return;
+  preparingPhotos = true; $('enter-room').disabled = true;
+  const progress = () => { $('opening-progress').textContent = `正在准备照片 ${preparedPhotos.size} / ${requiredPhotos.length}`; };
+  progress();
+  await Promise.all(requiredPhotos.map(async src => {
+    if (!preparedPhotos.has(src) && await preloadPhoto(src)) preparedPhotos.add(src);
+    progress();
+  }));
+  preparingPhotos = false; photosReady = preparedPhotos.size === requiredPhotos.length;
+  $('enter-room').disabled = false;
+  $('enter-room').textContent = photosReady ? '进入 →' : '重试加载 →';
+  $('opening-progress').hidden = photosReady;
+  if (!photosReady) $('opening-progress').textContent = `已准备 ${preparedPhotos.size} / ${requiredPhotos.length}，部分照片未加载，请重试。`;
+}
+preparePhotos();
 function toast(message) {
   $('toast').textContent = message; $('toast').classList.add('visible');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('visible'), 3200);
@@ -40,7 +61,7 @@ function showMap() {
   $('room').hidden = true; $('terminal').hidden = false; $('back-room').hidden = false; $('piece-tray').hidden = true;
   window.scrollTo(0, 0); $('map-title').setAttribute('tabindex', '-1'); $('map-title').focus({ preventScroll: true });
 }
-$('enter-room').addEventListener('click', () => showRoom());
+$('enter-room').addEventListener('click', () => { if (photosReady) showRoom(); else preparePhotos(); });
 $('back-room').addEventListener('click', () => showRoom());
 $('wall-map').addEventListener('click', showMap);
 
@@ -56,6 +77,8 @@ wallSvg.querySelector('g').replaceChildren(...cities.map(city => {
 for (const city of cities) {
   const button = document.createElement('button'); button.className = 'city-point'; button.id = `city-${city.id}`;
   button.style.left = `${city.x}%`; button.style.top = `${city.y}%`;
+  const warmCity = () => city.shows.forEach(date => preloadPhoto(city.photos[date].front, true));
+  button.addEventListener('pointerenter', warmCity); button.addEventListener('focus', warmCity);
   button.innerHTML = `<span class="point-dot"></span><span class="city-label">${city.name}${city.shows.length > 1 ? '<em>×2</em>' : ''}</span>`;
   button.addEventListener('click', () => {
     if (city.shows.length === 1) { openRecord(`${city.id}:${city.shows[0]}`); return; }
@@ -228,6 +251,9 @@ function openRecord(id) {
 }
 function renderTicket() {
   const record = currentRecord(), photos = record.photos;
+  preloadPhoto(photos.front, true); preloadPhoto(photos.back, true);
+  const preview = getGate(record.id).type !== 'puzzle' || isSolved(state, record.id);
+  $('puzzle-board').style.backgroundImage = preview ? `url("${assetUrl(photos.thumbnail)}")` : 'none';
   selectedPiece = null; showAllPieces = false; hintLevel = 0; $('piece-picker').hidden = true;
   $('unlock-answer').value = ''; $('gate-feedback').textContent = '';
   $('piece-tray').hidden = getGate(record.id).type !== 'puzzle';
