@@ -8,6 +8,11 @@ export const gates = {
     placeholder: '输入节目名', hint: '节目名是四个字，开头是“我”。', reveal: '我型我秀。',
     source: { title: '题目和答案由送礼人提供' },
   },
+  'shenzhen:2026.08.29': {
+    type: 'quiz', question: '《念》这首单曲的 MV 是薛之谦花了多少天亲手剪辑的？', answers: ['11', '11天', '十一', '十一天'],
+    placeholder: '输入天数', hint: '比十天多一天。', reveal: '11天。',
+    source: { title: '题目和答案由送礼人提供' },
+  },
   'shenzhen:2026.08.30': {
     type: 'quiz', question: '我崇拜~', answers: ['你回眸一笑就爱恨重来'],
     placeholder: '接下一句', hint: '从“你回眸”开始。', reveal: '你回眸一笑就爱恨重来',

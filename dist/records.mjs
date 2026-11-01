@@ -129,7 +129,7 @@ export const cities = [
     }
   }
 ];
-export const allRecords = cities.flatMap(city => city.shows.map(date => ({ id: `${city.id}:${date}`, date, city: city.name, cityId: city.id, photos: city.photos[date] })));
+export const allRecords = cities.flatMap(city => city.shows.map(date => ({ id: `${city.id}:${date}`, date, city: city.name, cityId: city.id, photos: { ...city.photos[date], thumbnail: city.photos[date].front.replace('front.jpg', 'front-thumb.jpg') } })));
 export const total = allRecords.length;
 export function cleanProgress(value) {
   return [...new Set(Array.isArray(value) ? value.filter(id => allRecords.some(record => record.id === id)) : [])];

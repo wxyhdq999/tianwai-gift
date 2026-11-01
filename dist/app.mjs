@@ -1,3 +1,4 @@
+import { assetUrl, createPhotoPreloader } from './media.mjs';
 import { createGift } from './gift.mjs';
 import { createFinale } from './finale.mjs';
 import { canArrange, canOpenPackage } from './journey-state.mjs';
@@ -15,6 +16,7 @@ let searchId = puzzleRecords.find(record => !state.collected.includes(record.id)
 let hintLevel = 0;
 let toastTimer;
 const currentRecord = () => getRecord(`${currentCity.id}:${currentCity.shows[page]}`);
+const preloadPhoto = createPhotoPreloader();
 function toast(message) {
   $('toast').textContent = message; $('toast').classList.add('visible');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('visible'), 3200);
@@ -55,8 +57,21 @@ wallSvg.querySelector('g').replaceChildren(...cities.map(city => {
 for (const city of cities) {
   const button = document.createElement('button'); button.className = 'city-point'; button.id = `city-${city.id}`;
   button.style.left = `${city.x}%`; button.style.top = `${city.y}%`;
+  const warmCity = () => city.shows.forEach(date => preloadPhoto(city.photos[date].front.replace('front.jpg', 'front-thumb.jpg'), true));
+  button.addEventListener('pointerenter', warmCity); button.addEventListener('focus', warmCity);
   button.innerHTML = `<span class="point-dot"></span><span class="city-label">${city.name}${city.shows.length > 1 ? '<em>×2</em>' : ''}</span>`;
-  button.addEventListener('click', () => openRecord(`${city.id}:${city.shows[0]}`)); $('city-points').append(button);
+  button.addEventListener('click', () => {
+    if (city.shows.length === 1) { openRecord(`${city.id}:${city.shows[0]}`); return; }
+    info(city.name, []);
+    const choices = document.createElement('div'); choices.className = 'show-choices';
+    for (const date of city.shows) {
+      const choice = document.createElement('button'); choice.className = 'primary';
+      choice.textContent = date;
+      choice.addEventListener('click', () => { $('info-dialog').close(); openRecord(`${city.id}:${date}`); });
+      choices.append(choice);
+    }
+    $('info-content').append(choices);
+  }); $('city-points').append(button);
 }
 for (const record of puzzleRecords) {
   const option = document.createElement('option'); option.value = record.id; option.textContent = record.city;
@@ -115,7 +130,7 @@ $('room-package').addEventListener('click', () => { if (canOpenPackage(state)) g
 function makePiece(id, interactive = true) {
   const decoded = decodePiece(id), record = getRecord(decoded.recordId);
   const tile = document.createElement(interactive ? 'button' : 'div'); tile.className = 'photo-piece';
-  tile.style.backgroundImage = `url("${record.photos.front}")`;
+  tile.style.backgroundImage = `url("${assetUrl(record.photos.front)}")`;
   tile.style.backgroundPosition = `${(decoded.slot % 2) * 100}% ${Math.floor(decoded.slot / 2) * 100}%`;
   tile.style.aspectRatio = String(photoRatios.get(decoded.recordId) || 1);
   if (interactive) tile.type = 'button';
@@ -162,7 +177,7 @@ function renderPuzzle() {
     if (fixed || placed) {
       const decoded = placed ? decodePiece(placed) : { recordId: record.id, slot };
       const owner = getRecord(decoded.recordId);
-      cell.style.backgroundImage = `url("${owner.photos.front}")`;
+      cell.style.backgroundImage = `url("${assetUrl(owner.photos.front)}")`;
       cell.style.backgroundPosition = `${(decoded.slot % 2) * 100}% ${Math.floor(decoded.slot / 2) * 100}%`;
     } else { cell.classList.add('empty'); cell.textContent = '＋'; }
     if (!fixed) {
@@ -216,24 +231,53 @@ function openRecord(id) {
 }
 function renderTicket() {
   const record = currentRecord(), photos = record.photos;
+  const preview = getGate(record.id).type !== 'puzzle' || isSolved(state, record.id);
+  const board = $('puzzle-board');
+  board.style.backgroundImage = 'none';
+  if (preview) {
+    const thumbnail = new Image();
+    thumbnail.fetchPriority = 'high';
+    thumbnail.onload = () => {
+      if (currentRecord().id !== record.id) return;
+      board.style.backgroundImage = `url("${assetUrl(photos.thumbnail)}")`;
+      // Reserve the same shape before the full photo arrives.
+      const ratio = thumbnail.naturalWidth / thumbnail.naturalHeight;
+      if (!$('front-photo').complete || $('front-photo').classList.contains('is-loading')) {
+        board.style.width = `min(100%, ${230 * ratio}px)`;
+        board.style.aspectRatio = String(ratio);
+      }
+    };
+    thumbnail.src = assetUrl(photos.thumbnail);
+  }
   selectedPiece = null; showAllPieces = false; hintLevel = 0; $('piece-picker').hidden = true;
   $('unlock-answer').value = ''; $('gate-feedback').textContent = '';
   $('piece-tray').hidden = getGate(record.id).type !== 'puzzle';
   setFlipped(false, true);
   for (const side of ['front', 'back']) {
-    const image = $(`${side}-photo`); $(`${side}-error`).hidden = true;
-    image.onerror = () => { $(`${side}-error`).hidden = false; };
+    const image = $(`${side}-photo`), loading = $(`${side}-loading`);
+    image.classList.add('is-loading'); loading.hidden = false;
+    $(`${side}-error`).hidden = true;
     image.alt = `${record.city} · ${side === 'front' ? '正面' : '背面'}照片`;
-    if (side === 'front') {
-      const resize = () => {
-        if (!image.naturalWidth || !image.naturalHeight || currentRecord().id !== record.id) return;
+    image.decoding = 'async';
+    image.fetchPriority = side === 'front' ? 'high' : 'auto';
+    const expected = assetUrl(photos[side]);
+    const loaded = () => {
+      if (currentRecord().id !== record.id || image.getAttribute('src') !== expected || !image.naturalWidth) return;
+      image.classList.remove('is-loading'); loading.hidden = true;
+      if (side === 'front') {
         const ratio = image.naturalWidth / image.naturalHeight; photoRatios.set(record.id, ratio);
         $('puzzle-board').style.width = `min(100%, ${230 * ratio}px)`;
         $('puzzle-board').style.aspectRatio = String(ratio);
         renderPuzzle();
-      };
-      image.onload = resize; image.src = photos[side]; if (image.complete) resize();
-    } else image.src = photos[side];
+      }
+    };
+    image.onload = loaded;
+    image.onerror = () => {
+      if (currentRecord().id !== record.id || image.getAttribute('src') !== expected) return;
+      loading.hidden = true; $(`${side}-error`).hidden = false;
+    };
+    if (side === 'front') { image.src = expected; if (image.complete) loaded(); }
+    else image.removeAttribute('src');
   }
   $('record-number').textContent = ` ${String(allRecords.findIndex(item => item.id === record.id) + 1).padStart(2, '0')}`;
   $('record-en').textContent = `${currentCity.en} / LIVE RECORD`; $('record-title').textContent = record.city; updateDate();
@@ -252,6 +296,7 @@ function renderCollect() {
 }
 function setFlipped(value, immediate = false) {
   if (value && !isUnlocked(state, currentRecord().id)) return;
+  if (value) { const image = $('back-photo'), src = assetUrl(currentRecord().photos.back); if (image.getAttribute('src') !== src) image.src = src; }
   flipped = value; const turner = document.querySelector('.photo-turner');
   if (immediate) turner.style.transition = 'none';
   $('photo-flipper').classList.toggle('is-flipped', value);
