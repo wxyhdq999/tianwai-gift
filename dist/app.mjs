@@ -1,6 +1,6 @@
 import { assetUrl } from './media.mjs';
 import { createGift } from './gift.mjs';
-import { createFinale } from './finale.mjs';
+import { createFinale } from './finale.mjs?v=route-photo-1';
 import { canArrange, canOpenPackage } from './journey-state.mjs';
 import { cities, allRecords, total } from './records.mjs';
 import { getGate, puzzleRecords } from './unlocks.mjs';

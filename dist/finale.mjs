@@ -1,4 +1,4 @@
-import { assetUrl } from './media.mjs';
+import { assetUrl, showPreviewPhoto } from './media.mjs?v=route-photo-1';
 import { cities } from './records.mjs';
 import { chronological, validOrder, canArrange, confirmOrder } from './journey-state.mjs';
 import { birthday } from './birthday.mjs';
@@ -33,7 +33,7 @@ export function createFinale({ getState, save, showMap, openRecord, goHome }) {
       button.className = 'sort-card'; button.type = 'button';
       button.setAttribute('aria-label', `第${index + 1}位：${record.city}`);
       button.setAttribute('aria-pressed', String(selected === index));
-      const image = document.createElement('img'); image.src = assetUrl(record.photos.thumbnail || record.photos.front); image.decoding = 'async'; image.alt = `${record.city}现场`; image.draggable = false;
+      const image = document.createElement('img'); showPreviewPhoto(image, record.photos); image.alt = `${record.city}现场`; image.draggable = false;
       const number = document.createElement('span'); number.className = 'sort-number'; number.textContent = String(index + 1).padStart(2, '0');
       const label = document.createElement('span'); label.textContent = record.city;
       button.append(number, image, label);
@@ -80,7 +80,7 @@ export function createFinale({ getState, save, showMap, openRecord, goHome }) {
       for (const record of chronological.filter(record => record.cityId === city.id)) {
         const button = document.createElement('button'); button.className = 'mini-ticket'; button.id = `preview-${record.id}`;
         button.disabled = true; button.setAttribute('aria-label', `回看${record.city} ${record.date}`);
-        const image = document.createElement('img'); image.src = assetUrl(record.photos.thumbnail || record.photos.front); image.decoding = 'async'; image.alt = '';
+        const image = document.createElement('img'); showPreviewPhoto(image, record.photos); image.alt = '';
         const date = document.createElement('small'); date.textContent = record.date.slice(5);
         button.append(image, date); button.addEventListener('click', () => openRecord(record.id)); previews.append(button);
       }

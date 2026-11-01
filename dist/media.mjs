@@ -38,3 +38,18 @@ export function createPhotoPreloader(makeImage = () => new Image(), concurrency 
     pump(); return job.promise;
   };
 }
+
+// Keep a visible embedded photo while the network version is being fetched.
+export function showPreviewPhoto(image, photos, makeImage = () => new Image()) {
+  image.decoding = 'async';
+  image.src = photos.preview || assetUrl(photos.front);
+  const upgrade = makeImage();
+  upgrade.decoding = 'async';
+  upgrade.onload = () => { image.src = upgrade.src; };
+  upgrade.onerror = () => {
+    // Retry the full photo once; leave the embedded preview visible on failure.
+    upgrade.onerror = null;
+    upgrade.src = assetUrl(photos.front);
+  };
+  upgrade.src = assetUrl(photos.thumbnail || photos.front);
+}
