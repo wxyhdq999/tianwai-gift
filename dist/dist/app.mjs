@@ -57,7 +57,18 @@ for (const city of cities) {
   const button = document.createElement('button'); button.className = 'city-point'; button.id = `city-${city.id}`;
   button.style.left = `${city.x}%`; button.style.top = `${city.y}%`;
   button.innerHTML = `<span class="point-dot"></span><span class="city-label">${city.name}${city.shows.length > 1 ? '<em>×2</em>' : ''}</span>`;
-  button.addEventListener('click', () => openRecord(`${city.id}:${city.shows[0]}`)); $('city-points').append(button);
+  button.addEventListener('click', () => {
+    if (city.shows.length === 1) { openRecord(`${city.id}:${city.shows[0]}`); return; }
+    info(city.name, []);
+    const choices = document.createElement('div'); choices.className = 'show-choices';
+    for (const date of city.shows) {
+      const choice = document.createElement('button'); choice.className = 'primary';
+      choice.textContent = date;
+      choice.addEventListener('click', () => { $('info-dialog').close(); openRecord(`${city.id}:${date}`); });
+      choices.append(choice);
+    }
+    $('info-content').append(choices);
+  }); $('city-points').append(button);
 }
 for (const record of puzzleRecords) {
   const option = document.createElement('option'); option.value = record.id; option.textContent = record.city;

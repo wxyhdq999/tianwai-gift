@@ -4,3 +4,4 @@
 .record-back #back-caption{background:none;border:0;box-shadow:none;padding:0;margin:13px 0;font-size:12px;line-height:1.8;color:#354e49;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}
 
 .photo-face img.is-loading{opacity:0}.photo-loading{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:#c2cbbd;font-size:11px;letter-spacing:1px;background:#1b2b34;z-index:1}
+.show-choices{display:grid;gap:12px}.show-choices button{min-height:46px;font-family:var(--mono)}
