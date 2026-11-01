@@ -1,6 +1,11 @@
 import { allRecords } from './records.mjs';
 
 export const gates = {
+  'qujing:2024.01.13': {
+    type: 'quiz', question: '当0717号不想离开地球时，他以（）贿赂上司', answers: ['一块手表'],
+    placeholder: '输入答案', hint: '是一件戴在手腕上的物品。', reveal: '一块手表。',
+    source: { title: '题目和答案由送礼人提供' },
+  },
   'changzhou:2023.10.21': { type: 'puzzle' },
   'nanjing:2026.05.29': { type: 'puzzle' },
   'zunyi:2023.08.26': {
