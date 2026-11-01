@@ -1,4 +1,4 @@
-import { birthday } from './birthday.mjs';
+import { birthday } from './birthday.mjs?v=sword-gift-1';
 import { canOpenPackage } from './journey-state.mjs';
 
 export function createGift({ getState, save }) {

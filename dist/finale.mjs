@@ -1,7 +1,7 @@
 import { assetUrl, showPreviewPhoto } from './media.mjs?v=route-photo-1';
 import { cities } from './records.mjs';
 import { chronological, validOrder, canArrange, confirmOrder } from './journey-state.mjs';
-import { birthday } from './birthday.mjs';
+import { birthday } from './birthday.mjs?v=sword-gift-1';
 
 export function createFinale({ getState, save, showMap, openRecord, goHome }) {
   const $ = id => document.getElementById(id);
